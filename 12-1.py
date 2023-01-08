@@ -1,43 +1,34 @@
-from telegram import Bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 bot = Bot(token='5934547319:AAHs2zQ1MiBL1SdrApl-xwKnek_6xd219DU')
 updater = Updater(token='5934547319:AAHs2zQ1MiBL1SdrApl-xwKnek_6xd219DU')
 dispatcher = updater.dispatcher
 
-def start(update, context):
-    context.bot.send_message(update.effective_chat.id,'Введите /calc и арифметическое выражение для вычисления значения')
-    context.bot.send_message(update.effective_chat.id,'Введите /cancel если хотите закончить')
 
+def start(update, _):
+    keyboard = [[
+            InlineKeyboardButton('Как пользоваться❓', callback_data='1')
+            ],
+        [InlineKeyboardButton('Вычислить значение\nвыражения➕➖✖➗', callback_data='2')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text("Выберите действие: ", reply_markup=reply_markup)
+  
 
-def cancel(update, context):
-    context.bot.send_message(update.effective_chat.id,"До свидания!")
+def button(update, _):
+    query = update.callback_query
+    variant = query.data
+    query.answer()
+    if variant == '1':
+        query.edit_message_text(text = "Для вычисления значения арифметического выражения\
+        введите его в сообщении. В качестве знаков знаков действий используйте '+' для сложения,\
+        '-' для вычитания, '*' для умножения, '/' для деления и '^' для возведения в степень")
+    else:
+        query.edit_message_text(text = "Введите арифметическое выражение")
 
 
 def calc(update, context):
-    if context.args:
-        string = ''.join(context.args)
-        result = []
-        digit = ""
-        for symbol in string:
-            if symbol.isdigit() or symbol == '.':
-                digit += symbol
-            elif symbol == ' ':
-                continue
-            else:
-                result.append(float(digit))
-                digit = ""
-                result.append(symbol) 
-        else:
-            if digit:
-                result.append(float(digit))
-        answer = calculate(result)
-        context.bot.send_message(update.effective_chat.id, f'{string} = {answer}')
-        loger(result, answer, update)
-    else:
-        context.bot.send_message(update.effective_chat.id, 'Для вычисления введите /calc и арифметическое выражение в одном сообщении')
-
-def calc2(update, context):
     string = update.message.text
     result = []
     digit = ""
@@ -54,6 +45,7 @@ def calc2(update, context):
         if digit:
             result.append(float(digit))
     answer = calculate(result)
+    loger(string, answer, update)
     context.bot.send_message(update.effective_chat.id, f'{string} = {answer}')
 
 def calculate(lst):
@@ -94,15 +86,10 @@ def loger(primer, result, update):
         data.write(string)
         data.write(str(result))
 
-start_handler = CommandHandler('start', start)
-calc_handler = CommandHandler('calc', calc)
-cancel_handler = CommandHandler('cancel', cancel)
-calc2_handler = MessageHandler(Filters.text, calc2)
 
-dispatcher.add_handler(start_handler)
-dispatcher.add_handler(calc_handler)
-dispatcher.add_handler(cancel_handler)
-dispatcher.add_handler(calc2_handler)
+dispatcher.add_handler(CommandHandler('start', start))
+dispatcher.add_handler(MessageHandler(Filters.text, calc))
+dispatcher.add_handler(CallbackQueryHandler(button))
 
 updater.start_polling()
 updater.idle()
