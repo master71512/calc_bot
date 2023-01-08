@@ -10,22 +10,22 @@ def start(update, _):
     keyboard = [[
             InlineKeyboardButton('Как пользоваться❓', callback_data='1')
             ],
-        [InlineKeyboardButton('Вычислить значение\nвыражения➕➖✖➗', callback_data='2')]
+        [InlineKeyboardButton('Вычислить значение выражения➕➖✖➗', callback_data='2')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text("Выберите действие: ", reply_markup=reply_markup)
   
 
-def button(update, _):
+def button(update, context):
     query = update.callback_query
     variant = query.data
     query.answer()
     if variant == '1':
-        query.edit_message_text(text = "Для вычисления значения арифметического выражения\
+        context.bot.send_message(update.effective_chat.id,"Для вычисления значения арифметического выражения\
         введите его в сообщении. В качестве знаков знаков действий используйте '+' для сложения,\
         '-' для вычитания, '*' для умножения, '/' для деления и '^' для возведения в степень")
     else:
-        query.edit_message_text(text = "Введите арифметическое выражение")
+        context.bot.send_message(update.effective_chat.id, "Введите арифметическое выражение")
 
 
 def calc(update, context):
